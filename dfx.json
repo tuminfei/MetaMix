@@ -1,0 +1,29 @@
+{
+  "canisters": {
+    "METAMIX_backend": {
+      "main": "src/METAMIX_backend/main.mo",
+      "type": "motoko"
+    },
+    "METAMIX_frontend": {
+      "dependencies": [
+        "METAMIX_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/METAMIX_frontend/src/index.html"
+      },
+      "source": [
+        "src/METAMIX_frontend/assets",
+        "dist/METAMIX_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
