@@ -21,42 +21,62 @@ import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
 import Types "./types";
-import Wordlists "eip39_wordlists";
 import Conversion "util/conversion";
+import Wordlists "util/eip39_wordlists";
 import Utils "util/utils";
 
 shared actor class MetaMix(owner : Principal) = Self {
-  stable var _owner : Principal = owner;
+    stable var _owner : Principal = owner;
+    stable var next_mnemonic_id : Nat = 0;
+    stable var mnemonics_entries : [(Nat, [Text])] = [];
 
-  public shared (msg) func setOwner(owner : Principal) : async () {
-    assert (msg.caller == _owner);
-    _owner := owner;
-  };
+    var mnemonics : TrieMap.TrieMap<Nat, [Text]> = TrieMap.fromEntries(mnemonics_entries.vals(), Nat.equal, Hash.hash);
 
-  public query (msg) func getOwner() : async Principal {
-    _owner;
-  };
-
-  public shared (msg) func getRandomToken(remaingTokenSize : Nat) : async [Text] {
-    var wordlists : [Text] = Wordlists.get_worklists();
-    var wordlists_size : Nat = wordlists.size();
-    var random_word : [Text] = [];
-    var bucket_counts : [Nat] = [0, 256, 512, 768, 1024, 1280, 1536, 1792];
-
-    var seed = await Random.blob();
-    var generator = Random.Finite(seed);
-
-    for (i in Iter.range(0, 23)) {
-      var bucket_index = i % bucket_counts.size();
-      var random : Nat = Conversion.valueToNat(#Nat8(Utils.unwrap(generator.byte())));
-      var word_index : Nat = bucket_counts[bucket_index] + random;
-      if (word_index > Nat.sub(wordlists_size, 1)) {
-        word_index := word_index % wordlists_size;
-      };
-      random_word := Array.append(random_word, [wordlists[word_index]]);
+    public shared (msg) func setOwner(owner : Principal) : async () {
+        assert (msg.caller == _owner);
+        _owner := owner;
     };
 
-    Debug.print(debug_show ("+++++: ", random_word));
-    return random_word;
-  };
+    public query (msg) func getOwner() : async Principal {
+        _owner;
+    };
+
+    public shared (msg) func add_mnemonic() : async Nat {
+        let mnemonic_id = next_mnemonic_id;
+        next_mnemonic_id += 1;
+        let mnemonic : [Text] = await _generate_random_mnemonic(24);
+        mnemonics.put(mnemonic_id, mnemonic);
+        return mnemonic_id;
+    };
+
+    public query (msg) func get_mnemonic(mnemonic_id : Nat) : async ?[Text] {
+        mnemonics.get(mnemonic_id);
+    };
+
+    private func _generate_random_mnemonic(mnemonic_size : Nat) : async [Text] {
+        var wordlists : [Text] = Wordlists.get_worklists();
+        var wordlists_size : Nat = wordlists.size();
+        var random_word : [Text] = [];
+        var bucket_counts : [Nat] = [0, 256, 512, 768, 1024, 1280, 1536, 1792];
+
+        var seed = await Random.blob();
+        var generator = Random.Finite(seed);
+
+        for (i in Iter.range(0, 23)) {
+            var bucket_index = i % bucket_counts.size();
+            var random : Nat = Conversion.valueToNat(#Nat8(Utils.unwrap(generator.byte())));
+            var word_index : Nat = bucket_counts[bucket_index] + random;
+            if (word_index > Nat.sub(wordlists_size, 1)) {
+                word_index := word_index % wordlists_size;
+            };
+            random_word := Array.append(random_word, [wordlists[word_index]]);
+        };
+
+        Debug.print(debug_show ("random_word: ", random_word));
+        return random_word;
+    };
+
+    system func preupgrade() {
+        mnemonics_entries := Iter.toArray(mnemonics.entries());
+    };
 };
