@@ -21,8 +21,8 @@ import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
 import Types "./types";
+import Wordlists "util/bip39_wordlists";
 import Conversion "util/conversion";
-import Wordlists "util/eip39_wordlists";
 import Utils "util/utils";
 
 shared actor class MetaMix(owner : Principal) = Self {
