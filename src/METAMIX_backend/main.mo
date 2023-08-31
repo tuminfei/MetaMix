@@ -40,34 +40,36 @@ shared actor class MetaMix(owner : Principal) = Self {
     var wallets : TrieMap.TrieMap<Nat, Types.Wallet> = TrieMap.fromEntries(wallets_entries.vals(), Nat.equal, Hash.hash);
     var blockchains : TrieMap.TrieMap<Nat, Types.BlockChain> = TrieMap.fromEntries(blockchains_entries.vals(), Nat.equal, Hash.hash);
 
-    public func init() {
-        var blockchain_id = next_blockchain_id;
-        next_blockchain_id += 1;
-        let blockchain_ic : Types.BlockChain = {
-            id = blockchain_id;
-            title = "Dfinity";
-            symbol = "IC";
-            chain_id = 0;
-            key_type = #ed25519;
-            token_code = "IC";
-            token_decimals = 18;
-            address_type = #principal;
-        };
-        blockchains.put(blockchain_id, blockchain_ic);
+    public shared ({ caller }) func caninster_init() : async () {
+        if (next_blockchain_id < 3) {
+            var blockchain_id = next_blockchain_id;
+            next_blockchain_id += 1;
+            let blockchain_ic : Types.BlockChain = {
+                id = blockchain_id;
+                title = "Dfinity";
+                symbol = "IC";
+                chain_id = 0;
+                key_type = #ed25519;
+                token_code = "IC";
+                token_decimals = 18;
+                address_type = #principal;
+            };
+            blockchains.put(blockchain_id, blockchain_ic);
 
-        blockchain_id := next_blockchain_id;
-        next_blockchain_id += 1;
-        let blockchain_eth : Types.BlockChain = {
-            id = blockchain_id;
-            title = "Ethereum";
-            symbol = "ETH";
-            chain_id = 0;
-            key_type = #secp256k1;
-            token_code = "ETH";
-            token_decimals = 18;
-            address_type = #hex;
+            blockchain_id := next_blockchain_id;
+            next_blockchain_id += 1;
+            let blockchain_eth : Types.BlockChain = {
+                id = blockchain_id;
+                title = "Ethereum";
+                symbol = "ETH";
+                chain_id = 0;
+                key_type = #secp256k1;
+                token_code = "ETH";
+                token_decimals = 18;
+                address_type = #hex;
+            };
+            blockchains.put(blockchain_id, blockchain_eth);
         };
-        blockchains.put(blockchain_id, blockchain_eth);
     };
 
     public shared (msg) func setOwner(owner : Principal) : async () {
@@ -150,5 +152,6 @@ shared actor class MetaMix(owner : Principal) = Self {
 
     system func preupgrade() {
         mnemonics_entries := Iter.toArray(mnemonics.entries());
+        blockchains_entries := Iter.toArray(blockchains.entries());
     };
 };

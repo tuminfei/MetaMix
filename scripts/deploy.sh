@@ -5,4 +5,5 @@ echo $ADMIN_PRINCIPAL
 echo $ADMIN_ACCOUNTID
 echo $TEST_PRINCIPAL
 
-dfx deploy --network=local METAMIX_backend --argument "(principal \"$ADMIN_PRINCIPAL\")" --mode reinstall
+# dfx deploy --network=local METAMIX_backend --argument "(principal \"$ADMIN_PRINCIPAL\")" --mode reinstall
+dfx deploy --network=local METAMIX_backend --argument "(principal \"$ADMIN_PRINCIPAL\")"
