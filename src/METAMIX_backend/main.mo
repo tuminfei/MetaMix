@@ -31,11 +31,44 @@ shared actor class MetaMix(owner : Principal) = Self {
     stable var _owner : Principal = owner;
     stable var next_mnemonic_id : Nat = 0;
     stable var next_wallet_id : Nat = 0;
+    stable var next_blockchain_id : Nat = 0;
     stable var mnemonics_entries : [(Nat, [Text])] = [];
     stable var wallets_entries : [(Nat, Types.Wallet)] = [];
+    stable var blockchains_entries : [(Nat, Types.BlockChain)] = [];
 
     var mnemonics : TrieMap.TrieMap<Nat, [Text]> = TrieMap.fromEntries(mnemonics_entries.vals(), Nat.equal, Hash.hash);
     var wallets : TrieMap.TrieMap<Nat, Types.Wallet> = TrieMap.fromEntries(wallets_entries.vals(), Nat.equal, Hash.hash);
+    var blockchains : TrieMap.TrieMap<Nat, Types.BlockChain> = TrieMap.fromEntries(blockchains_entries.vals(), Nat.equal, Hash.hash);
+
+    public func init() {
+        var blockchain_id = next_blockchain_id;
+        next_blockchain_id += 1;
+        let blockchain_ic : Types.BlockChain = {
+            id = blockchain_id;
+            title = "Dfinity";
+            symbol = "IC";
+            chain_id = 0;
+            key_type = #ed25519;
+            token_code = "IC";
+            token_decimals = 18;
+            address_type = #principal;
+        };
+        blockchains.put(blockchain_id, blockchain_ic);
+
+        blockchain_id := next_blockchain_id;
+        next_blockchain_id += 1;
+        let blockchain_eth : Types.BlockChain = {
+            id = blockchain_id;
+            title = "Ethereum";
+            symbol = "ETH";
+            chain_id = 0;
+            key_type = #secp256k1;
+            token_code = "ETH";
+            token_decimals = 18;
+            address_type = #hex;
+        };
+        blockchains.put(blockchain_id, blockchain_eth);
+    };
 
     public shared (msg) func setOwner(owner : Principal) : async () {
         assert (msg.caller == _owner);
@@ -44,6 +77,10 @@ shared actor class MetaMix(owner : Principal) = Self {
 
     public query (msg) func getOwner() : async Principal {
         _owner;
+    };
+
+    public query (msg) func get_blockchain(blockchain_id : Nat) : async ?Types.BlockChain {
+        blockchains.get(blockchain_id);
     };
 
     public shared (msg) func add_mnemonic() : async Nat {
@@ -62,11 +99,13 @@ shared actor class MetaMix(owner : Principal) = Self {
         var private_key : [Nat8] = [];
         var public_key : [Nat8] = [];
         var seed : Text = "";
+        var address : Text = "";
         let wallet_id = next_wallet_id;
         next_wallet_id += 1;
         switch (wallet_type) {
             case (#ed25519) {
                 private_key := Ed25519Lib.Utils.randomPrivateKey();
+                public_key := Ed25519Lib.ED25519.getPublicKey(private_key);
             };
             case (_) {};
         };
@@ -74,15 +113,15 @@ shared actor class MetaMix(owner : Principal) = Self {
             id = wallet_id;
             title;
             blockchain_id = 1;
-            default_address_type = #main;
+            address_type = #default;
             key_type = #ed25519;
             mnemonic = "";
             private_key;
             public_key;
             seed;
-            address = "";
+            address;
         };
-
+        wallets.put(wallet_id, wallet);
         return wallet;
     };
 

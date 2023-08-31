@@ -15,14 +15,15 @@ module {
 
   public type KeyType = {
     #secp256k1;
-    #ecdsa;
     #ed25519;
     #sr25519;
   };
 
   public type AddressType = {
+    #default;
+    #principal;
     #account;
-    #main;
+    #hex;
   };
 
   public type Wallet = {
@@ -35,16 +36,18 @@ module {
     public_key : [Nat8];
     private_key : [Nat8];
     address : Text;
-    default_address_type : AddressType;
+    address_type : AddressType;
   };
 
   public type BlockChain = {
     id : Nat;
     title : Text;
+    symbol : Text;
     chain_id : Nat;
     key_type : KeyType;
     token_code : Text;
     token_decimals : Nat;
+    address_type : AddressType;
   };
 
   public type Network = {

@@ -65,6 +65,11 @@ let additions = [
   , version = "v1.0.0"
   , repo = "https://github.com/nirvana369/ed25519.git"
   , dependencies = [ "base" ] : List Text
+  },
+  { name = "sha3"
+  , repo = "https://github.com/hanbu97/motoko-sha3"
+  , version = "v0.1.1"
+  , dependencies = [ "base" ]
   }
 ] : List Package
 in  upstream # additions
