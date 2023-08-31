@@ -28,11 +28,13 @@ module {
   public type Wallet = {
     id : Nat;
     title : Text;
-    seed : Blob;
+    seed : Text;
     key_type : KeyType;
     mnemonic : Text;
     blockchain_id : Nat;
-    public_key : Text;
+    public_key : [Nat8];
+    private_key : [Nat8];
+    address : Text;
     default_address_type : AddressType;
   };
 

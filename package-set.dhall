@@ -61,5 +61,10 @@ let additions = [
   , version = "v0.0.1"
   , dependencies = [ "base" ]
   },
+  { name = "ed25519"
+  , version = "v1.0.0"
+  , repo = "https://github.com/nirvana369/ed25519.git"
+  , dependencies = [ "base" ] : List Text
+  }
 ] : List Package
 in  upstream # additions

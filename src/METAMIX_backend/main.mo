@@ -1,4 +1,5 @@
 import Array "mo:base/Array";
+import Blob "mo:base/Blob";
 import Bool "mo:base/Bool";
 import Debug "mo:base/Debug";
 import Error "mo:base/Error";
@@ -19,6 +20,7 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
+import Ed25519Lib "mo:ed25519";
 
 import Types "./types";
 import Wordlists "util/bip39_wordlists";
@@ -28,9 +30,12 @@ import Utils "util/utils";
 shared actor class MetaMix(owner : Principal) = Self {
     stable var _owner : Principal = owner;
     stable var next_mnemonic_id : Nat = 0;
+    stable var next_wallet_id : Nat = 0;
     stable var mnemonics_entries : [(Nat, [Text])] = [];
+    stable var wallets_entries : [(Nat, Types.Wallet)] = [];
 
     var mnemonics : TrieMap.TrieMap<Nat, [Text]> = TrieMap.fromEntries(mnemonics_entries.vals(), Nat.equal, Hash.hash);
+    var wallets : TrieMap.TrieMap<Nat, Types.Wallet> = TrieMap.fromEntries(wallets_entries.vals(), Nat.equal, Hash.hash);
 
     public shared (msg) func setOwner(owner : Principal) : async () {
         assert (msg.caller == _owner);
@@ -51,6 +56,34 @@ shared actor class MetaMix(owner : Principal) = Self {
 
     public query (msg) func get_mnemonic(mnemonic_id : Nat) : async ?[Text] {
         mnemonics.get(mnemonic_id);
+    };
+
+    public shared (msg) func add_wallet(wallet_type : Types.KeyType, title : Text) : async Types.Wallet {
+        var private_key : [Nat8] = [];
+        var public_key : [Nat8] = [];
+        var seed : Text = "";
+        let wallet_id = next_wallet_id;
+        next_wallet_id += 1;
+        switch (wallet_type) {
+            case (#ed25519) {
+                private_key := Ed25519Lib.Utils.randomPrivateKey();
+            };
+            case (_) {};
+        };
+        let wallet : Types.Wallet = {
+            id = wallet_id;
+            title;
+            blockchain_id = 1;
+            default_address_type = #main;
+            key_type = #ed25519;
+            mnemonic = "";
+            private_key;
+            public_key;
+            seed;
+            address = "";
+        };
+
+        return wallet;
     };
 
     private func _generate_random_mnemonic(mnemonic_size : Nat) : async [Text] {
